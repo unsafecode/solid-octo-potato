@@ -1,0 +1,75 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/api-newsfeed/src",
+  "monorepo": true,
+  "root": "apps/api-newsfeed",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/api-newsfeed/tsconfig.app.json"
+  },
+  "projects": {
+    "api-user": {
+      "type": "application",
+      "root": "apps/api-user",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-user/tsconfig.app.json"
+      }
+    },
+    "api-newsfeed": {
+      "type": "application",
+      "root": "apps/api-newsfeed",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-newsfeed/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-newsfeed/tsconfig.app.json"
+      }
+    },
+    "user-domain": {
+      "type": "application",
+      "root": "apps/user-domain",
+      "entryFile": "main",
+      "sourceRoot": "apps/user-domain/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/user-domain/tsconfig.app.json"
+      }
+    },
+    "conversation-domain": {
+      "type": "application",
+      "root": "apps/conversation-domain",
+      "entryFile": "main",
+      "sourceRoot": "apps/conversation-domain/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/conversation-domain/tsconfig.app.json"
+      }
+    },
+    "azure-bindings": {
+      "type": "library",
+      "root": "libs/azure-bindings",
+      "entryFile": "index",
+      "sourceRoot": "libs/azure-bindings/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/azure-bindings/tsconfig.lib.json"
+      }
+    },
+    "shared": {
+      "type": "library",
+      "root": "libs/shared",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/shared/tsconfig.lib.json"
+      }
+    },
+    "models/conversation": {
+      "type": "library",
+      "root": "libs/models/conversation",
+      "entryFile": "index",
+      "sourceRoot": "libs/models/conversation/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/models/conversation/tsconfig.lib.json"
+      }
+    }
+  }
+}
