@@ -11,12 +11,11 @@ import {
   ServiceBusClient,
   ServiceBusSender,
 } from '@azure/service-bus';
-import { ModuleRef, ModulesContainer } from '@nestjs/core';
-import { Injectable, Logger, Type } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { IApplicationConfig } from '@app/shared/config';
 import { ConfigService } from '@nestjs/config';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { Module } from '@nestjs/core/injector/module';
+import { v4 as uuidv4 } from 'uuid';
+import { DiscoveryService } from './DiscoveryService';
 
 const COMMANDS_TOPIC_NAME = 'commands';
 const COMMAND_HANDLER_METADATA = '__commandHandler__';
@@ -24,29 +23,25 @@ const COMMAND_HANDLER_METADATA = '__commandHandler__';
 @Injectable()
 export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
   extends ObservableBus<CommandBase>
-  implements ICommandBus<CommandBase> {
+  implements ICommandBus<CommandBase>, OnModuleInit {
   serviceBusClient: ServiceBusClient;
   sender: ServiceBusSender;
   serviceBusAdministrationClient: ServiceBusAdministrationClient;
   private readonly logger = new Logger(AzureServiceBusCommandBus.name);
-  /**
-   *
-   */
+
   constructor(
-    private readonly moduleRef: ModuleRef,
-    private readonly modulesContainer: ModulesContainer,
-    configSvc: ConfigService<IApplicationConfig>,
+    private readonly discoveryService: DiscoveryService,
+    private readonly configSvc: ConfigService<IApplicationConfig>,
   ) {
     super();
-    const cnn = configSvc.get<string>('ServiceBusConnectionString');
+  }
+
+  async onModuleInit() {
+    const cnn = this.configSvc.get<string>('ServiceBusConnectionString');
     this.serviceBusClient = new ServiceBusClient(cnn);
     this.serviceBusAdministrationClient = new ServiceBusAdministrationClient(
       cnn,
     );
-
-    this.setup();
-  }
-  async setup() {
     if (
       !(await this.serviceBusAdministrationClient.topicExists(
         COMMANDS_TOPIC_NAME,
@@ -59,56 +54,30 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
 
     this.sender = this.serviceBusClient.createSender(COMMANDS_TOPIC_NAME);
 
-    const modules = [...this.modulesContainer.values()];
-    const commands = this.flatMap<ICommandHandler>(modules, (instance) =>
-      this.filterProvider(instance, COMMAND_HANDLER_METADATA),
+    const commands = this.discoveryService.discover<ICommandHandler>(
+      COMMAND_HANDLER_METADATA,
     );
 
     this.register(commands);
   }
 
-  flatMap<T>(
-    modules: Module[],
-    callback: (instance: InstanceWrapper) => Type<any> | undefined,
-  ): Type<T>[] {
-    const items = modules
-      .map((module) => [...module.providers.values()].map(callback))
-      .reduce((a, b) => a.concat(b), []);
-    return items.filter((element) => !!element) as Type<T>[];
-  }
-
-  filterProvider(
-    wrapper: InstanceWrapper,
-    metadataKey: string,
-  ): Type<any> | undefined {
-    const { instance } = wrapper;
-    if (!instance) {
-      return undefined;
-    }
-    return this.extractMetadata(instance, metadataKey);
-  }
-
-  extractMetadata(
-    instance: Record<string, any>,
-    metadataKey: string,
-  ): Type<any> {
-    if (!instance.constructor) {
-      return;
-    }
-    const metadata = Reflect.getMetadata(metadataKey, instance.constructor);
-    return metadata ? (instance.constructor as Type<any>) : undefined;
-  }
-
   async execute<T extends CommandBase>(command: T): Promise<any> {
+    const transactionId = uuidv4();
     await this.sender.sendMessages({
       body: command,
       applicationProperties: {
         Command: command.constructor.name,
+        transactionId,
       },
     });
+
+    return { transactionId };
   }
 
-  async bind<T extends CommandBase>(handler: ICommandHandler<T>, commandName: string) {
+  async bind<T extends CommandBase>(
+    handler: ICommandHandler<T>,
+    commandName: string,
+  ) {
     if (
       !(await this.serviceBusAdministrationClient.subscriptionExists(
         COMMANDS_TOPIC_NAME,
@@ -145,27 +114,33 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
     );
     sbCommandHandler.subscribe({
       processMessage: async (args) => {
-        const result = await handler.execute(args.body);
-        await this.sender.sendMessages([{
-          body: result,
-          applicationProperties: {
-            "ResultOf": commandName,
-            "Error": false
-          }
-        }]);
+        const { transactionId } = args.applicationProperties;
+        let result: any;
+        let isError = false;
+        try {
+          result = await handler.execute(args.body);
+        } catch (error) {
+          isError = true;
+          result = {
+            errorMessage: error.message,
+            errorName: error.name,
+            errorStack: error.stack,
+          };
+        } finally {
+          await this.sender.sendMessages([
+            {
+              body: result,
+              applicationProperties: {
+                ResultOf: commandName,
+                Error: isError,
+                transactionId,
+              },
+            },
+          ]);
+        }
       },
       processError: async (args) => {
-        await this.sender.sendMessages([{
-          body: {
-            errorMessage: args.error.message,
-            errorName: args.error.name,
-            errorStack: args.error.stack
-          },
-          applicationProperties: {
-            "ResultOf": commandName,
-            "Error": true
-          }
-        }]);
+        this.logger.error(args.error.message);
       },
     });
   }
@@ -175,7 +150,7 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
   }
 
   protected registerHandler(handler: CommandHandlerType) {
-    const instance = this.moduleRef.get(handler, { strict: false });
+    const instance = this.discoveryService.get(handler);
     if (!instance) {
       return;
     }
@@ -183,7 +158,7 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
     if (!target) {
       throw new InvalidCommandHandlerException();
     }
-    this.bind(instance as ICommandHandler<CommandBase>, target.name);
+    this.bind(instance, target.name);
   }
   private reflectCommandName(handler: CommandHandlerType): FunctionConstructor {
     return Reflect.getMetadata(COMMAND_HANDLER_METADATA, handler);

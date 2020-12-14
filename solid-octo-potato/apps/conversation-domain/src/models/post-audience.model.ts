@@ -4,13 +4,17 @@ import {
     CosmosUniqueKey,
   } from '@dinohorvat/azure-database';
 
-@CosmosPartitionKey('rootPostId')
+@CosmosPartitionKey('audience')
 export class PostAudience {
   @CosmosUniqueKey()
   get id(): string {
-    return `${this.rootPostId}_${this.kind}_${this.audienceId}`;
+    return `${this.postId}_${this.audience}`;
+  }
+  get audience(): string {
+    return `${this.kind}_${this.audienceId}`;
   }
   kind: "author" | "mention" | "tag";
+  postId: string;
   rootPostId: string;
   audienceId: string;
 

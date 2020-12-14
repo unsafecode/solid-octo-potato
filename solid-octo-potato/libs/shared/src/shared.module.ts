@@ -8,11 +8,10 @@ import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
 
 @Module({
   imports: [
-    CqrsModule,
     AzureBindingsModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.development.local', '.env.development'],
+      envFilePath: ['.env'],
     }),
   ],
   providers: [

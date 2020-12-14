@@ -17,6 +17,7 @@ import { IApplicationConfig } from '@app/shared/config';
 import { ConfigService } from '@nestjs/config';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { Module } from '@nestjs/core/injector/module';
+import { DiscoveryService } from './DiscoveryService';
 
 const EVENTS_TOPIC_NAME = 'events';
 const EVENT_HANDLER_METADATA = '__eventsHandler';
@@ -33,8 +34,7 @@ export class AzureServiceBusEventBus<EventBase extends IEvent = IEvent>
    *
    */
   constructor(
-    private readonly moduleRef: ModuleRef,
-    private readonly modulesContainer: ModulesContainer,
+    private readonly discoveryService: DiscoveryService,
     configSvc: ConfigService<IApplicationConfig>,
   ) {
     super();
@@ -68,44 +68,9 @@ export class AzureServiceBusEventBus<EventBase extends IEvent = IEvent>
 
     this.sender = this.serviceBusClient.createSender(EVENTS_TOPIC_NAME);
 
-    const modules = [...this.modulesContainer.values()];
-    const events = this.flatMap<IEventHandler<EventBase>>(modules, (instance) =>
-      this.filterProvider(instance, EVENT_HANDLER_METADATA),
-    );
+    const events = this.discoveryService.discover<IEventHandler<EventBase>>(EVENT_HANDLER_METADATA);
     
     this.register(events);
-  }
-
-  flatMap<T>(
-    modules: Module[],
-    callback: (instance: InstanceWrapper) => Type<any> | undefined,
-  ): Type<T>[] {
-    const items = modules
-      .map((module) => [...module.providers.values()].map(callback))
-      .reduce((a, b) => a.concat(b), []);
-    return items.filter((element) => !!element) as Type<T>[];
-  }
-
-  filterProvider(
-    wrapper: InstanceWrapper,
-    metadataKey: string,
-  ): Type<any> | undefined {
-    const { instance } = wrapper;
-    if (!instance) {
-      return undefined;
-    }
-    return this.extractMetadata(instance, metadataKey);
-  }
-
-  extractMetadata(
-    instance: Record<string, any>,
-    metadataKey: string,
-  ): Type<any> {
-    if (!instance.constructor) {
-      return;
-    }
-    const metadata = Reflect.getMetadata(metadataKey, instance.constructor);
-    return metadata ? (instance.constructor as Type<any>) : undefined;
   }
 
   async bind<T extends EventBase>(handler: IEventHandler<T>, name: string) {
@@ -158,7 +123,7 @@ export class AzureServiceBusEventBus<EventBase extends IEvent = IEvent>
   }
 
   protected registerHandler(handler: EventHandlerType<EventBase>) {
-    const instance = this.moduleRef.get(handler, { strict: false });
+    const instance = this.discoveryService.get(handler);
     if (!instance) {
       return;
     }

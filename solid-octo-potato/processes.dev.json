@@ -1,0 +1,22 @@
+{
+  "apps": [
+    {
+      "name": "api-newsfeed",
+      "script": "npm",
+      "args": "run start:dev -- api-newsfeed",
+      "instances": "1"
+    },
+    {
+      "name": "user-domain",
+      "script": "npm",
+      "args": "run start:dev -- user-domain",
+      "instances": "1"
+    },
+    {
+      "name": "conversation-domain",
+      "script": "npm",
+      "args": "run start:dev -- conversation-domain",
+      "instances": "1"
+    }
+  ]
+}

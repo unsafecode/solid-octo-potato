@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class PostCreateCommandHandler
   implements ICommandHandler<PostCreateCommand> {
   private readonly logger = new Logger(PostCreateCommandHandler.name);
+
   constructor(
     private readonly svc: ConversationDomainService,
     private readonly events: EventBus,
@@ -17,16 +18,16 @@ export class PostCreateCommandHandler
     this.logger.debug(`Handling new post '${command.content}'`);
     const newPostId = uuidv4();
     await this.svc.createRoot({
-        authorUserId: command.userId,
-        content: command.content,
-        createdAt: new Date(),
-        lastUpdatedAt: new Date(),
-        id: newPostId,
-        rootPostId: newPostId,
-        geo: null,
-        hashtags: command.hashtags,
-        mentions: command.hashtags,
-        attachments: command.attachments
+      authorUserId: command.userId,
+      content: command.content,
+      createdAt: new Date(),
+      lastUpdatedAt: new Date(),
+      id: newPostId,
+      rootPostId: newPostId,
+      geo: null,
+      hashtags: command.hashtags,
+      mentions: command.hashtags,
+      attachments: command.attachments,
     });
 
     if (command.mentions) {

@@ -8,15 +8,6 @@
     "tsConfigPath": "apps/api-newsfeed/tsconfig.app.json"
   },
   "projects": {
-    "api-user": {
-      "type": "application",
-      "root": "apps/api-user",
-      "entryFile": "main",
-      "sourceRoot": "apps/api-user/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/api-user/tsconfig.app.json"
-      }
-    },
     "api-newsfeed": {
       "type": "application",
       "root": "apps/api-newsfeed",
@@ -69,6 +60,24 @@
       "sourceRoot": "libs/models/conversation/src",
       "compilerOptions": {
         "tsConfigPath": "libs/models/conversation/tsconfig.lib.json"
+      }
+    },
+    "models/user": {
+      "type": "library",
+      "root": "libs/models/user",
+      "entryFile": "index",
+      "sourceRoot": "libs/models/user/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/models/user/tsconfig.lib.json"
+      }
+    },
+    "api-user": {
+      "type": "application",
+      "root": "apps/api-user",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-user/tsconfig.app.json"
       }
     }
   }

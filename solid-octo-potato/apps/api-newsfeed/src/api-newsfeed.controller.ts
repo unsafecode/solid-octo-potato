@@ -20,7 +20,7 @@ export class ApiNewsfeedController {
   @HttpCode(202)
   async createPost(@Body() { userId, content, mentions, hashtags, attachments }) {
     this.logger.debug(this.createPost.name);
-    await this.commandBus.execute(
+    return await this.commandBus.execute(
       new PostCreateCommand(userId, content, mentions, hashtags, attachments,),
     );
   }

@@ -29,6 +29,12 @@
       ],
       "@app/models/conversation/*": [
         "libs/models/conversation/src/*"
+      ],
+      "@app/models/user": [
+        "libs/models/user/src"
+      ],
+      "@app/models/user/*": [
+        "libs/models/user/src/*"
       ]
     }
   }
