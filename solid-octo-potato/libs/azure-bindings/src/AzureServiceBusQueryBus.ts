@@ -3,24 +3,16 @@ import {
   IQuery,
   IQueryBus,
   IQueryHandler,
-  IQueryResult,
   ObservableBus,
   QueryHandlerType,
 } from '@nestjs/cqrs';
 import {
-  ServiceBusAdministrationClient,
-  ServiceBusClient,
-  ServiceBusReceiver,
   ServiceBusSender,
 } from '@azure/service-bus';
-import { Injectable, Logger, OnModuleInit, Type } from '@nestjs/common';
-import { ModuleRef, ModulesContainer } from '@nestjs/core';
-import { IApplicationConfig } from '@app/shared/config';
-import { ConfigService } from '@nestjs/config';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { Module } from '@nestjs/core/injector/module';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DiscoveryService } from './DiscoveryService';
+import { ServiceBusUtilsService } from './service-bus-utils.service';
 
 const QUERIES_TOPIC_NAME = 'queries';
 const QUERY_HANDLER_METADATA = '__queryHandler__';
@@ -29,35 +21,21 @@ const QUERY_HANDLER_METADATA = '__queryHandler__';
 export class AzureServiceBusQueryBus<QueryBase extends IQuery = IQuery>
   extends ObservableBus<QueryBase>
   implements IQueryBus<QueryBase>, OnModuleInit {
-  serviceBusClient: ServiceBusClient;
-  sender: ServiceBusSender;
-  receiver: ServiceBusReceiver;
-  serviceBusAdministrationClient: ServiceBusAdministrationClient;
+  private sender: ServiceBusSender;
   private readonly logger = new Logger(AzureServiceBusQueryBus.name);
   /**
    *
    */
   constructor(
     private readonly discoveryService: DiscoveryService,
-    private readonly configSvc: ConfigService<IApplicationConfig>,
+    private readonly sbUtils: ServiceBusUtilsService,
   ) {
     super();
   }
   async onModuleInit() {
-    const cnn = this.configSvc.get<string>('ServiceBusConnectionString');
-    this.serviceBusClient = new ServiceBusClient(cnn);
-    this.serviceBusAdministrationClient = new ServiceBusAdministrationClient(
-      cnn,
-    );
-    if (
-      !(await this.serviceBusAdministrationClient.topicExists(
-        QUERIES_TOPIC_NAME,
-      ))
-    ) {
-      await this.serviceBusAdministrationClient.createTopic(QUERIES_TOPIC_NAME);
-    }
+    await this.sbUtils.ensureTopicExists(QUERIES_TOPIC_NAME);
 
-    this.sender = this.serviceBusClient.createSender(QUERIES_TOPIC_NAME);
+    this.sender = this.sbUtils.createSender(QUERIES_TOPIC_NAME);
 
     const queryHandlers = this.discoveryService.discover<IQueryHandler>(
       QUERY_HANDLER_METADATA,
@@ -80,17 +58,11 @@ export class AzureServiceBusQueryBus<QueryBase extends IQuery = IQuery>
       },
     });
 
-    const queryNameResult = `${queryName}Result`;
-    const receiver = await this.serviceBusClient.acceptSession(
+    const result = await this.sbUtils.waitForResponse<TResult>(
       QUERIES_TOPIC_NAME,
-      queryNameResult,
+      `${queryName}Result`,
       sessionId,
     );
-    const [message] = await receiver.receiveMessages(1);
-
-    const result = message.body as TResult;
-    await receiver.completeMessage(message);
-    await receiver.close();
 
     return result;
   }
@@ -99,17 +71,24 @@ export class AzureServiceBusQueryBus<QueryBase extends IQuery = IQuery>
     handler: IQueryHandler<T, TResult>,
     queryName: string,
   ) {
-    await this.ensureSubscriptionExists(queryName, false, queryName, 'input');
-    await this.ensureSubscriptionExists(
-      `${queryName}Result`,
-      true,
+    await this.sbUtils.ensureSubscriptionExists(
+      QUERIES_TOPIC_NAME,
       queryName,
-      'output',
+      `Query = @queryName AND Kind = @kind`,
+      { '@queryName': queryName, '@kind': 'input' },
+      { requiresSession: false },
+    );
+    await this.sbUtils.ensureSubscriptionExists(
+      QUERIES_TOPIC_NAME,
+      `${queryName}Result`,
+      `Query = @queryName AND Kind = @kind`,
+      { '@queryName': queryName, '@kind': 'output' },
+      { requiresSession: true },
     );
 
     this.logger.debug('Registering ' + handler.constructor.name);
 
-    const sbQueryHandler = await this.serviceBusClient.createReceiver(
+    const sbQueryHandler = await this.sbUtils.createReceiver(
       QUERIES_TOPIC_NAME,
       queryName,
     );
@@ -142,43 +121,6 @@ export class AzureServiceBusQueryBus<QueryBase extends IQuery = IQuery>
         this.logger.error(args.error);
       },
     });
-  }
-
-  private async ensureSubscriptionExists(
-    subscriptionName: string,
-    requiresSession: boolean,
-    queryName: string,
-    kind: string,
-  ) {
-    if (
-      !(await this.serviceBusAdministrationClient.subscriptionExists(
-        QUERIES_TOPIC_NAME,
-        subscriptionName,
-      ))
-    ) {
-      await this.serviceBusAdministrationClient.createSubscription(
-        QUERIES_TOPIC_NAME,
-        subscriptionName,
-        { requiresSession },
-      );
-    } else {
-      const sub = await this.serviceBusAdministrationClient.getRule(
-        QUERIES_TOPIC_NAME,
-        subscriptionName,
-        '$Default',
-      );
-      await this.serviceBusAdministrationClient.updateRule(
-        QUERIES_TOPIC_NAME,
-        subscriptionName,
-        {
-          ...sub,
-          filter: {
-            sqlExpression: `Query = @queryName AND Kind = @kind`,
-            sqlParameters: { '@queryName': queryName, '@kind': kind },
-          },
-        },
-      );
-    }
   }
 
   register(handlers: QueryHandlerType<QueryBase>[] = []) {

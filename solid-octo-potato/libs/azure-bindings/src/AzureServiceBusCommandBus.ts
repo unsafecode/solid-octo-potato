@@ -6,16 +6,11 @@ import {
   ICommandBus,
   ObservableBus,
 } from '@nestjs/cqrs';
-import {
-  ServiceBusAdministrationClient,
-  ServiceBusClient,
-  ServiceBusSender,
-} from '@azure/service-bus';
+import { ServiceBusSender } from '@azure/service-bus';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IApplicationConfig } from '@app/shared/config';
-import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import { DiscoveryService } from './DiscoveryService';
+import { ServiceBusUtilsService } from './service-bus-utils.service';
 
 const COMMANDS_TOPIC_NAME = 'commands';
 const COMMAND_HANDLER_METADATA = '__commandHandler__';
@@ -24,35 +19,20 @@ const COMMAND_HANDLER_METADATA = '__commandHandler__';
 export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
   extends ObservableBus<CommandBase>
   implements ICommandBus<CommandBase>, OnModuleInit {
-  serviceBusClient: ServiceBusClient;
   sender: ServiceBusSender;
-  serviceBusAdministrationClient: ServiceBusAdministrationClient;
   private readonly logger = new Logger(AzureServiceBusCommandBus.name);
 
   constructor(
     private readonly discoveryService: DiscoveryService,
-    private readonly configSvc: ConfigService<IApplicationConfig>,
+    private readonly sbUtils: ServiceBusUtilsService,
   ) {
     super();
   }
 
   async onModuleInit() {
-    const cnn = this.configSvc.get<string>('ServiceBusConnectionString');
-    this.serviceBusClient = new ServiceBusClient(cnn);
-    this.serviceBusAdministrationClient = new ServiceBusAdministrationClient(
-      cnn,
-    );
-    if (
-      !(await this.serviceBusAdministrationClient.topicExists(
-        COMMANDS_TOPIC_NAME,
-      ))
-    ) {
-      await this.serviceBusAdministrationClient.createTopic(
-        COMMANDS_TOPIC_NAME,
-      );
-    }
+    await this.sbUtils.ensureTopicExists(COMMANDS_TOPIC_NAME);
 
-    this.sender = this.serviceBusClient.createSender(COMMANDS_TOPIC_NAME);
+    this.sender = this.sbUtils.createSender(COMMANDS_TOPIC_NAME);
 
     const commands = this.discoveryService.discover<ICommandHandler>(
       COMMAND_HANDLER_METADATA,
@@ -62,85 +42,75 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
   }
 
   async execute<T extends CommandBase>(command: T): Promise<any> {
-    const transactionId = uuidv4();
+    const commandName = command.constructor.name;
+    const sessionId = `${commandName}-${uuidv4()}`;
     await this.sender.sendMessages({
+      replyToSessionId: sessionId, // VERY IMPORTANT, requests are NOT session-based, only responses!
       body: command,
       applicationProperties: {
-        Command: command.constructor.name,
-        transactionId,
+        Command: commandName,
+        Kind: 'input',
       },
     });
 
-    return { transactionId };
+    const result = await this.sbUtils.waitForResponse<any>(
+      COMMANDS_TOPIC_NAME,
+      `${commandName}Result`,
+      sessionId,
+    );
+
+    return result;
   }
 
   async bind<T extends CommandBase>(
     handler: ICommandHandler<T>,
     commandName: string,
   ) {
-    if (
-      !(await this.serviceBusAdministrationClient.subscriptionExists(
-        COMMANDS_TOPIC_NAME,
-        commandName,
-      ))
-    ) {
-      await this.serviceBusAdministrationClient.createSubscription(
-        COMMANDS_TOPIC_NAME,
-        commandName,
-      );
-    } else {
-      const sub = await this.serviceBusAdministrationClient.getRule(
-        COMMANDS_TOPIC_NAME,
-        commandName,
-        '$Default',
-      );
-      await this.serviceBusAdministrationClient.updateRule(
-        COMMANDS_TOPIC_NAME,
-        commandName,
-        {
-          ...sub,
-          filter: {
-            sqlExpression: `Command = @name`,
-            sqlParameters: {
-              '@name': commandName,
-            },
-          },
-        },
-      );
-    }
-    const sbCommandHandler = this.serviceBusClient.createReceiver(
+    await this.sbUtils.ensureSubscriptionExists(
+      COMMANDS_TOPIC_NAME,
+      commandName,
+      `Command = @Command AND Kind = @kind`,
+      { '@Command': commandName, '@kind': 'input' },
+      { requiresSession: false },
+    );
+    await this.sbUtils.ensureSubscriptionExists(
+      COMMANDS_TOPIC_NAME,
+      `${commandName}Result`,
+      `Command = @Command AND Kind = @kind`,
+      { '@Command': commandName, '@kind': 'output' },
+      { requiresSession: true },
+    );
+    const sbCommandHandler = this.sbUtils.createReceiver(
       COMMANDS_TOPIC_NAME,
       commandName,
     );
     sbCommandHandler.subscribe({
-      processMessage: async (args) => {
-        const { transactionId } = args.applicationProperties;
-        let result: any;
-        let isError = false;
+      processMessage: async (message) => {
+        let result: any,
+          hasError = false;
         try {
-          result = await handler.execute(args.body);
+          result = await handler.execute(message.body);
         } catch (error) {
-          isError = true;
           result = {
             errorMessage: error.message,
             errorName: error.name,
             errorStack: error.stack,
           };
+          hasError = true;
         } finally {
-          await this.sender.sendMessages([
-            {
-              body: result,
-              applicationProperties: {
-                ResultOf: commandName,
-                Error: isError,
-                transactionId,
-              },
+          await this.sender.sendMessages({
+            sessionId: message.replyToSessionId,
+            body: result,
+            applicationProperties: {
+              Command: commandName,
+              Kind: 'output',
+              hasError,
             },
-          ]);
+          });
         }
       },
       processError: async (args) => {
-        this.logger.error(args.error.message);
+        this.logger.error(args.error);
       },
     });
   }

@@ -5,6 +5,7 @@ import { AzureServiceBusEventBus } from '@app/azure-bindings/AzureServiceBusEven
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus, CqrsModule, EventBus, QueryBus } from '@nestjs/cqrs';
+import { AzureCosmosDbModule } from '@dinohorvat/azure-database';
 
 @Module({
   imports: [

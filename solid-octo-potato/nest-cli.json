@@ -79,6 +79,24 @@
       "compilerOptions": {
         "tsConfigPath": "apps/api-user/tsconfig.app.json"
       }
+    },
+    "hashtag-domain": {
+      "type": "application",
+      "root": "apps/hashtag-domain",
+      "entryFile": "main",
+      "sourceRoot": "apps/hashtag-domain/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/hashtag-domain/tsconfig.app.json"
+      }
+    },
+    "models/hashtag": {
+      "type": "library",
+      "root": "libs/models/hashtag",
+      "entryFile": "index",
+      "sourceRoot": "libs/models/hashtag/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/models/hashtag/tsconfig.lib.json"
+      }
     }
   }
 }

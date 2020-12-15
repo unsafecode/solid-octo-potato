@@ -20,4 +20,17 @@ export class PostAudience {
 
   @CosmosDateTime() createdAt: Date;
   @CosmosDateTime() lastUpdatedAt: Date;
+
+  toJSON() {
+    return {
+      id: this.id,
+      audience: this.audience,
+      kind: this.kind,
+      postId: this.postId,
+      rootPostId: this.rootPostId,
+      audienceId: this.audienceId,
+      createdAt: this.createdAt,
+      lastUpdatedAt: this.lastUpdatedAt
+    }
+  }
 }

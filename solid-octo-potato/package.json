@@ -37,6 +37,7 @@
     "@nestjs/microservices": "^7.6.1",
     "@nestjs/platform-express": "^7.5.1",
     "concurrently": "^5.3.0",
+    "lodash": "^4.17.20",
     "pm2": "^4.5.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
@@ -49,6 +50,7 @@
     "@nestjs/testing": "^7.5.1",
     "@types/express": "^4.17.8",
     "@types/jest": "^26.0.15",
+    "@types/lodash": "^4.14.165",
     "@types/node": "^14.14.6",
     "@types/supertest": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
@@ -93,7 +95,9 @@
       "@app/models/conversation/(.*)": "<rootDir>/libs/models/conversation/src/$1",
       "@app/models/conversation": "<rootDir>/libs/models/conversation/src",
       "@app/models/user/(.*)": "<rootDir>/libs/models/user/src/$1",
-      "@app/models/user": "<rootDir>/libs/models/user/src"
+      "@app/models/user": "<rootDir>/libs/models/user/src",
+      "@app/models/hashtag/(.*)": "<rootDir>/libs/models/hashtag/src/$1",
+      "@app/models/hashtag": "<rootDir>/libs/models/hashtag/src"
     }
   }
 }

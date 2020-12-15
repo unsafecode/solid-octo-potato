@@ -14,7 +14,7 @@ export class PostCreateCommandHandler
     private readonly svc: ConversationDomainService,
     private readonly events: EventBus,
   ) {}
-  async execute(command: PostCreateCommand): Promise<any> {
+  async execute(command: PostCreateCommand): Promise<string> {
     this.logger.debug(`Handling new post '${command.content}'`);
     const newPostId = uuidv4();
     await this.svc.createRoot({
@@ -37,5 +37,7 @@ export class PostCreateCommandHandler
         ),
       );
     }
+
+    return newPostId;
   }
 }

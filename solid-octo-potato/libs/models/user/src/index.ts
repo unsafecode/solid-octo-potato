@@ -1,2 +1,2 @@
-export * from './models/user.module';
-export * from './models/user.service';
+export * from './commands';
+export * from './queries';

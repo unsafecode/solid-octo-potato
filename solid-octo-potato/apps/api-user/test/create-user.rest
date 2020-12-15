@@ -1,0 +1,10 @@
+POST http://localhost:3001/api/user HTTP/1.1
+Content-Type: application/json
+
+{
+    "firstName": "Riccardo",
+    "lastName": "Chiodaroli",
+    "email": "r.chiodaroli@live.com",
+    "upn": "r.chiodaroli@live.com",
+    "aboutMe": "Lorem ipsum dolor"
+}

@@ -35,6 +35,12 @@
       ],
       "@app/models/user/*": [
         "libs/models/user/src/*"
+      ],
+      "@app/models/hashtag": [
+        "libs/models/hashtag/src"
+      ],
+      "@app/models/hashtag/*": [
+        "libs/models/hashtag/src/*"
       ]
     }
   }

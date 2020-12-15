@@ -7,7 +7,7 @@ import {
   } from '@dinohorvat/azure-database';
 
 @CosmosPartitionKey('rootPostId')
-export class Post {
+export class PostModel {
   @CosmosUniqueKey()
   id: string;
   rootPostId: string;

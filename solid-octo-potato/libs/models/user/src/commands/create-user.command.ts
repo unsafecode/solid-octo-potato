@@ -4,6 +4,7 @@ export class UserCreateCommand {
         public readonly lastName: string,        
         public readonly email: string,
         public readonly upn: string,
+        public readonly aboutMe: string,
     ) {
         
     }
