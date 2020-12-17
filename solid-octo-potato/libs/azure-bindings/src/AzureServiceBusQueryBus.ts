@@ -99,6 +99,7 @@ export class AzureServiceBusQueryBus<QueryBase extends IQuery = IQuery>
         try {
           result = await handler.execute(message.body);
         } catch (error) {
+          this.logger.error(error.message);
           result = {
             errorMessage: error.message,
             errorName: error.name,

@@ -1,5 +1,5 @@
-import { UserCreateCommand, UserGetProfileQuery } from '@app/models/user';
-import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import { UserCreateCommand, UserFollowUserCommand, UserGetProfileQuery, UserUnFollowUserCommand } from '@app/models/user';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 @Controller("api/user")
@@ -17,7 +17,21 @@ export class ApiUserController {
   }
 
   @Post()
-  async register(@Body() { firstName, lastName, email, upn, aboutMe }) {
-    return await this.cmdBus.execute(new UserCreateCommand(firstName, lastName, email, upn, aboutMe));
+  async register(@Body() { firstName, lastName, displayName, email, upn, aboutMe }) {
+    return await this.cmdBus.execute(new UserCreateCommand(firstName, lastName, displayName, email, upn, aboutMe));
+  }
+
+  @Post(":id/follow")
+  @HttpCode(200)
+  async followUser(@Param("id") targetUserId) {
+    const sourceUserId = "cbef4451-2595-401f-af51-6272936d9f9c";
+    return await this.cmdBus.execute(new UserFollowUserCommand(sourceUserId, targetUserId));
+  }
+
+  @Post(":id/unfollow")
+  @HttpCode(200)
+  async unfollowUser(@Param("id") targetUserId) {
+    const sourceUserId = "cbef4451-2595-401f-af51-6272936d9f9c";
+    return await this.cmdBus.execute(new UserUnFollowUserCommand(sourceUserId, targetUserId));
   }
 }

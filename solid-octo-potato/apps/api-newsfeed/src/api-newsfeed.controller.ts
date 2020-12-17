@@ -17,14 +17,16 @@ export class ApiNewsfeedController {
   @Get()
   async getMyNewsfeed() {
     const userId = "cbef4451-2595-401f-af51-6272936d9f9c";
-    const { users, hashtags } = await this.queryBus.execute(new UserGetInterestsQuery(userId));
-    const conversations: PostModel[] = await this.queryBus.execute<NewsfeedQuery>(new NewsfeedQuery(users, hashtags));
+    const { followedUsers, followedTags } = await this.queryBus.execute(new UserGetInterestsQuery(userId));
+    const conversations: PostModel[] = await this.queryBus.execute<NewsfeedQuery>(new NewsfeedQuery(followedUsers, followedTags));
 
     return conversations;
   }
 
-  @Post("post")
-  async createPost(@Body() { userId, content, mentions, hashtags, attachments }) {
+  @Post()
+  async createPost(@Body() { content, mentions, hashtags, attachments }) {
+    const userId = "cbef4451-2595-401f-af51-6272936d9f9c";
+
     const resolvedHashtagsIds: HashtagId[] = await this.commandBus.execute(new ResolveHashtagsCommand(hashtags));
     const resolvedUsersIds: UserId[] = await this.queryBus.execute(new ResolveMentionsQuery(mentions));
 

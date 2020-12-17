@@ -9,13 +9,14 @@ import { Hashtag } from "../models/hashtag.model";
 export class ResolveHashtagsCommandHandler implements ICommandHandler<ResolveHashtagsCommand> {
   constructor(@InjectModel(Hashtag) private readonly container: Container) {}
   async execute(command: ResolveHashtagsCommand): Promise<HashtagId[]> {
+    const list = command.names.map(x => `'${x}'`);
     const { resources: existing } = await this.container.items
       .query<Hashtag>({
-        query: "SELECT * FROM c WHERE c.hashtag IN ()",
+        query: `SELECT * FROM c WHERE c.hashtag IN (${list})`,
       })
       .fetchAll();
 
-    const existingIds = existing.map((h) => h.name);
+    const existingIds = existing.map((h) => h.hashtag);
     const toCreate = command.names.filter((x) => !existingIds.includes(x));
 
     const created = (await Promise.all(

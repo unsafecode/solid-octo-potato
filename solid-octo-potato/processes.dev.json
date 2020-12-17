@@ -7,6 +7,12 @@
       "instances": "1"
     },
     {
+      "name": "api-user",
+      "script": "npm",
+      "args": "run start:dev -- api-user",
+      "instances": "1"
+    },
+    {
       "name": "user-domain",
       "script": "npm",
       "args": "run start:dev -- user-domain",
@@ -16,6 +22,12 @@
       "name": "conversation-domain",
       "script": "npm",
       "args": "run start:dev -- conversation-domain",
+      "instances": "1"
+    },
+    {
+      "name": "hashtag-domain",
+      "script": "npm",
+      "args": "run start:dev -- hashtag-domain",
       "instances": "1"
     }
   ]

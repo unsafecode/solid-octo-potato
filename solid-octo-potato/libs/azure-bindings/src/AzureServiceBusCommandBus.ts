@@ -91,6 +91,7 @@ export class AzureServiceBusCommandBus<CommandBase extends ICommand = ICommand>
         try {
           result = await handler.execute(message.body);
         } catch (error) {
+          this.logger.error(error.message);
           result = {
             errorMessage: error.message,
             errorName: error.name,

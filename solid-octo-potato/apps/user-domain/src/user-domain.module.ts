@@ -2,6 +2,10 @@ import { UserGetInterestsQuery, UserGetProfileQuery } from '@app/models/user';
 import { SharedModule } from '@app/shared';
 import { AzureCosmosDbModule } from '@dinohorvat/azure-database';
 import { Module } from '@nestjs/common';
+import { UserFollowTagCommandHandler } from './commands/follow-tag.handler';
+import { UserFollowUserCommandHandler } from './commands/follow-user.handler';
+import { UserUnFollowTagCommandHandler } from './commands/unfollow-tag.handler';
+import { UserUnFollowUserCommandHandler } from './commands/unfollow-user.handler';
 import { UserCreateCommandHandler } from './commands/user-create.handler';
 import { UserMentionedEventHandler } from './events/user-mentioned.handler';
 import { UserProfile } from './models/user.model';
@@ -25,6 +29,10 @@ import { UserDomainService } from './user-domain.service';
     UserDomainService,
     UserMentionedEventHandler,
     UserCreateCommandHandler,
+    UserFollowUserCommandHandler,
+    UserFollowTagCommandHandler,
+    UserUnFollowTagCommandHandler,
+    UserUnFollowUserCommandHandler,
     UserGetProfileQueryHandler,
     UserGetInterestsQueryHandler,
     ResolveMentionsQueryHandler

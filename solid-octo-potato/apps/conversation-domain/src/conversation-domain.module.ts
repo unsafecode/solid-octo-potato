@@ -2,7 +2,6 @@ import { SharedModule } from '@app/shared';
 import { AzureCosmosDbModule } from '@dinohorvat/azure-database';
 import { Module } from '@nestjs/common';
 import { PostCreateCommandHandler } from './commands/create-post.handler';
-import { ConversationDomainService } from './conversation-domain.service';
 import { PostAudience } from './models/post-audience.model';
 import { PostModel } from './models/post.model';
 import { MyNewsfeedQueryHandler } from './queries/newsfeed.handler';
@@ -15,12 +14,11 @@ import { MyNewsfeedQueryHandler } from './queries/newsfeed.handler';
       endpoint: process.env.AZURE_COSMOS_DB_ENDPOINT,
       key: process.env.AZURE_COSMOS_DB_KEY,
     }),
-    AzureCosmosDbModule.forFeature([{ dto: PostModel }, { dto: PostAudience }]),
+    AzureCosmosDbModule.forFeature([{ dto: PostModel, collection: "posts" }, { dto: PostAudience, collection: "post-audiences" }]),
   ],
   exports: [SharedModule],
   controllers: [],
   providers: [
-    ConversationDomainService,
     PostCreateCommandHandler,
     MyNewsfeedQueryHandler,
   ],

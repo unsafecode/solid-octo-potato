@@ -6,7 +6,6 @@ import {
 
 @CosmosPartitionKey('audience')
 export class PostAudience {
-  @CosmosUniqueKey()
   get id(): string {
     return `${this.postId}_${this.audience}`;
   }

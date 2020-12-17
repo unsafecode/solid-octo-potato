@@ -12,7 +12,7 @@ export class ResolveMentionsQueryHandler implements IQueryHandler<ResolveMention
     const list = query.names.map((x) => `'${x}'`).join(",");
     const { resources: mentions } = await this.userContainer.items
       .query({
-        query: `SELECT u.id FROM u WHERE u.displayName IN (${list})`,
+        query: `SELECT VALUE u.id FROM u WHERE u.displayName IN (${list})`,
       })
       .fetchAll();
 

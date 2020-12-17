@@ -6,8 +6,8 @@ import {
   
   @CosmosPartitionKey('id')
   export class Hashtag {
-    @CosmosUniqueKey()
     id: string;
+    @CosmosUniqueKey()
     hashtag: string;
     name: string;
     description: string;
