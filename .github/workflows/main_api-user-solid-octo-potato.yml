@@ -1,0 +1,35 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js app to Azure Web App - api-user-solid-octo-potato
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Node.js version
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'api-user-solid-octo-potato'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_a71a2efc475d4fc2b1cfcfa06f9d0c5e }}
+        package: .
