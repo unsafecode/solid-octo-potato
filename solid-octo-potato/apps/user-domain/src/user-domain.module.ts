@@ -9,6 +9,7 @@ import { UserUnFollowUserCommandHandler } from './commands/unfollow-user.handler
 import { UserCreateCommandHandler } from './commands/user-create.handler';
 import { UserMentionedEventHandler } from './events/user-mentioned.handler';
 import { UserProfile } from './models/user.model';
+import { UserGetInfoQueryHandler } from './queries/get-user-info.handler';
 import { ResolveMentionsQueryHandler } from './queries/resolve-mentions.handler';
 import { UserGetInterestsQueryHandler } from './queries/user-getinterests.handler';
 import { UserGetProfileQueryHandler } from './queries/user-getprofile.handler';
@@ -34,6 +35,7 @@ import { UserDomainService } from './user-domain.service';
     UserUnFollowTagCommandHandler,
     UserUnFollowUserCommandHandler,
     UserGetProfileQueryHandler,
+    UserGetInfoQueryHandler,
     UserGetInterestsQueryHandler,
     ResolveMentionsQueryHandler
   ],

@@ -1,9 +1,36 @@
 {
   "apps": [
     {
-      "script": "api.js",
-      "instances": "max",
+      "name": "api-newsfeed",
+      "script": "npm",
+      "args": "run start:dev -- api-newsfeed",
+      "instances": "1"
+    },
+    {
+      "name": "api-user",
+      "script": "npm",
+      "args": "run start:dev -- api-user",
+      "instances": "4",
       "exec_mode": "cluster"
+    },
+    {
+      "name": "user-domain",
+      "script": "npm",
+      "args": "run start:dev -- user-domain",
+      "instances": "4",
+      "exec_mode": "cluster"
+    },
+    {
+      "name": "conversation-domain",
+      "script": "npm",
+      "args": "run start:dev -- conversation-domain",
+      "instances": "1"
+    },
+    {
+      "name": "hashtag-domain",
+      "script": "npm",
+      "args": "run start:dev -- hashtag-domain",
+      "instances": "1"
     }
   ]
 }

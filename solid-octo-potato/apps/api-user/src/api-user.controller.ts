@@ -1,7 +1,9 @@
 import { UserCreateCommand, UserFollowUserCommand, UserGetProfileQuery, UserUnFollowUserCommand } from '@app/models/user';
-import { Body, Controller, Get, HttpCode, Logger, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { AuthGuard } from '@nestjs/passport';
 
+// @UseGuards(AuthGuard("azure-ad"))
 @Controller("api/user")
 export class ApiUserController {
   private readonly logger = new Logger(ApiUserController.name);

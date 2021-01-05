@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/82c94272-deef-4b43-9033-c0d63dc695cf/resourceGroups/solid-octo-potato/providers/Microsoft.Web/sites/api-user-solid-octo-potato",
+    "appService.deploySubpath": "."
+}

@@ -29,6 +29,7 @@
   "dependencies": {
     "@azure/cosmos": "^3.9.3",
     "@azure/functions": "^1.0.3",
+    "@azure/search": "^11.0.0-preview.1",
     "@azure/service-bus": "^7.0.0",
     "@dinohorvat/azure-database": "^1.0.0",
     "@nestjs/azure-database": "^1.0.0",
@@ -38,9 +39,13 @@
     "@nestjs/core": "^7.5.1",
     "@nestjs/cqrs": "^7.0.1",
     "@nestjs/microservices": "^7.6.1",
+    "@nestjs/passport": "^7.1.5",
     "@nestjs/platform-express": "^7.5.1",
     "concurrently": "^5.3.0",
     "lodash": "^4.17.20",
+    "nest-azure-ad-jwt-validator": "^3.1.0",
+    "passport": "^0.4.1",
+    "passport-azure-ad": "^4.3.0",
     "pm2": "^4.5.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
@@ -55,6 +60,7 @@
     "@types/jest": "^26.0.15",
     "@types/lodash": "^4.14.165",
     "@types/node": "^14.14.6",
+    "@types/passport-azure-ad": "^4.0.7",
     "@types/supertest": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
     "@typescript-eslint/parser": "^4.6.1",
@@ -100,7 +106,9 @@
       "@app/models/user/(.*)": "<rootDir>/libs/models/user/src/$1",
       "@app/models/user": "<rootDir>/libs/models/user/src",
       "@app/models/hashtag/(.*)": "<rootDir>/libs/models/hashtag/src/$1",
-      "@app/models/hashtag": "<rootDir>/libs/models/hashtag/src"
+      "@app/models/hashtag": "<rootDir>/libs/models/hashtag/src",
+      "@app/api-commons/(.*)": "<rootDir>/libs/api-commons/src/$1",
+      "@app/api-commons": "<rootDir>/libs/api-commons/src"
     }
   }
 }

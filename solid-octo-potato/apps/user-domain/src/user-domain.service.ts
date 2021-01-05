@@ -12,6 +12,7 @@ export class UserDomainService {
     // In future, fill in defaults
     profile.followedTags = profile.followedTags ?? [];
     profile.followedUsers = profile.followedUsers ?? [];
+    profile.displayName = profile.displayName ?? `${profile.firstName} ${profile.lastName}`;
 
     const result = await this.userContainer.items.create(profile);
 

@@ -1,1 +1,2 @@
-export * from "./user-mentioned.event"
+export * from "./post-changed.event"
+export * from "./post-created.event"

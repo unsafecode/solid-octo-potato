@@ -41,6 +41,12 @@
       ],
       "@app/models/hashtag/*": [
         "libs/models/hashtag/src/*"
+      ],
+      "@app/api-commons": [
+        "libs/api-commons/src"
+      ],
+      "@app/api-commons/*": [
+        "libs/api-commons/src/*"
       ]
     }
   }

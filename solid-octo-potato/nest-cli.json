@@ -97,6 +97,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/models/hashtag/tsconfig.lib.json"
       }
+    },
+    "api-commons": {
+      "type": "library",
+      "root": "libs/api-commons",
+      "entryFile": "index",
+      "sourceRoot": "libs/api-commons/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/api-commons/tsconfig.lib.json"
+      }
     }
   }
 }

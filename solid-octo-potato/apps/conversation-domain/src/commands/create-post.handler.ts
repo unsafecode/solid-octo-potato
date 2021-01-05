@@ -1,5 +1,4 @@
 import { PostCreateCommand } from "@app/models/conversation/commands/create-post.command";
-import { UserMentionedEvent } from "@app/models/conversation/events/user-mentioned.event";
 import { Logger } from "@nestjs/common";
 import { CommandHandler, EventBus, ICommandHandler } from "@nestjs/cqrs";
 import { v4 as uuidv4 } from "uuid";
@@ -7,6 +6,7 @@ import { Container } from "@azure/cosmos";
 import { InjectModel } from "@dinohorvat/azure-database";
 import { PostAudience } from "../models/post-audience.model";
 import { PostModel } from "../models/post.model";
+import { UserMentionedEvent } from "@app/models/user";
 
 @CommandHandler(PostCreateCommand)
 export class PostCreateCommandHandler implements ICommandHandler<PostCreateCommand> {

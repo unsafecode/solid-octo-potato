@@ -1,4 +1,4 @@
-import { UserMentionedEvent } from "@app/models/conversation/events/user-mentioned.event";
+import { UserMentionedEvent } from "@app/models/user";
 import { Logger } from "@nestjs/common";
 import { EventsHandler, IEventHandler } from "@nestjs/cqrs";
 
